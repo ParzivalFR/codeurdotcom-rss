@@ -6,6 +6,7 @@ dotenvConfig();
 
 export const config: Config = {
   discordWebhook: process.env.DISCORD_WEBHOOK_URL as string,
+  discordUserId: process.env.DISCORD_USER_ID as string,
   feeds: [
     "https://www.codeur.com/projects?c=developpement&format=rss",
     "https://www.codeur.com/projects?c=web&format=rss",

@@ -17,6 +17,7 @@ export interface RSSItem {
 
 export interface Config {
   discordWebhook: string;
+  discordUserId?: string;
   feeds: string[];
   checkInterval: number;
   logLevel: "debug" | "info" | "warn" | "error";

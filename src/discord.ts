@@ -1,6 +1,6 @@
 // src/discord.ts
 import axios from "axios";
-import { decodeHtmlEntities } from "./config";
+import { config, decodeHtmlEntities } from "./config";
 import { Logger } from "./logger";
 import { RSSItem } from "./types";
 
@@ -15,14 +15,20 @@ export async function sendToDiscord(
     const cleanTitle = decodeHtmlEntities(item.title);
     const cleanDescription = decodeHtmlEntities(item.description);
 
-    // Extraction du budget et des catégories depuis la description nettoyée
+    // Extraction du budget et des catégories
     const budgetMatch = cleanDescription.match(/Budget : ([^-]+)/);
     const budget = budgetMatch ? budgetMatch[1].trim() : "Demande de devis";
 
     const categoriesMatch = cleanDescription.match(/Catégories : ([^<]+)/);
     const categories = categoriesMatch
-      ? categoriesMatch[1].split(",").map((cat) => cat.trim())
-      : [];
+      ? categoriesMatch[1]
+          .split(",")
+          .map((cat) => cat.trim())
+          .filter((cat) => cat)
+          // Ajoute un bullet point à chaque catégorie
+          .map((cat) => `• ${cat}`)
+          .join("\n")
+      : "Aucune catégorie";
 
     // Extraction de la description principale
     const descriptionMatch = cleanDescription.match(/<p>([^<]+)<\/p>/g);
@@ -30,7 +36,7 @@ export async function sendToDiscord(
       ? decodeHtmlEntities(descriptionMatch[1]?.replace(/<\/?p>/g, "").trim())
       : "";
 
-    // Formatage de la date en français
+    // Formatage de la date
     const date = new Date(item.pubDate);
     const formattedDate = `${date.getDate()}/${(date.getMonth() + 1)
       .toString()
@@ -55,8 +61,8 @@ export async function sendToDiscord(
         },
         {
           name: "📁 Catégories",
-          value: categories.join(" • "),
-          inline: true,
+          value: categories,
+          inline: false,
         },
       ],
       footer: {
@@ -64,7 +70,13 @@ export async function sendToDiscord(
       },
     };
 
-    await axios.post(webhookUrl, { embeds: [embed] });
+    // Création du message avec la mention ping
+    const message = {
+      content: `<@${config.discordUserId}> Nouveau projet disponible !`,
+      embeds: [embed],
+    };
+
+    await axios.post(webhookUrl, message);
     Logger.success(`Annonce "${cleanTitle}" envoyée avec succès`);
   } catch (error) {
     Logger.error(`Erreur lors de l'envoi de l'annonce vers Discord:`, error);
