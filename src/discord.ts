@@ -56,7 +56,7 @@ export async function sendToDiscord(
         {
           name: "📁 Catégories",
           value: categories.join(" • "),
-          inline: false,
+          inline: true,
         },
       ],
       footer: {
